@@ -16,6 +16,7 @@
                     <field name="cobranza_proxima_accion_id" />
                     <field name="cobranza_proxima_accion_fecha" />
                     <field name="cuota_mora_numero" />
+                    <field name="cuota_original_saldo" />
                     <field name="cuota_mora_monto" />
                     <field name="saldo_mora" sum="Deuda en Mora" />
                     <field name="saldo_total" sum="Deuda Total" />
@@ -123,7 +124,8 @@
                                         <field name="display_numero_cuota" readonly="1" />
                                         <field name="prestamo_id" readonly="1" widget="many2one_unclickable" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}" />
                                         <field name="fecha_vencimiento" readonly="1" />
-                                        <field name="total" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total" readonly="1" />
+                                        <field name="cuota_original" string="Monto original" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total" readonly="1" />
+                                        <field name="total" string="Monto actual" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total" readonly="1" />
                                         <field name="cobrado" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total" readonly="1" />
                                         <field name="saldo" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total" readonly="1" />
                                         <field name="sucursal_id" readonly="1" widget="many2one_unclickable" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}" />
@@ -131,45 +133,7 @@
                                         <field name="state_mora" readonly="1" />
                                         <field name="fecha_vencimiento_pre_semana" invisible="1" />
                                         <field name="fecha_vencimiento_pos_semana" invisible="1" />
-                                        <field name="pagos_360_generar_pago_voluntario" invisible="1" />
-                                        <button name="button_renovar_solicitud_cupon" type="object" string="Renovar cupon" class="oe_highlight" attrs="{'invisible': [('pagos_360_generar_pago_voluntario','=', False)]}" />
-                                        <button name="action_cupon_sent" type="object" string="Enviar cupon" class="oe_highlight" attrs="{'invisible': [('pagos_360_generar_pago_voluntario','=', False)]}" />
-                                        <field name="mobbex_suscripcion_suscriptor_confirm" invisible="1" />
-                                        <!-- <button name="mobbex_subscriber_execution" type="object" string="Debitar" class="oe_highlight" attrs="{'invisible': [('mobbex_suscripcion_suscriptor_confirm','=', False)]}" confirm="Esta seguro?"/> -->
                                     </tree>
-                                    <form>
-                                        <sheet>
-                                            <group>
-                                                <field name="display_numero_cuota" readonly="1" />
-                                                <field name="prestamo_id" readonly="1" widget="many2one_unclickable" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}" />
-                                                <field name="fecha_vencimiento" readonly="1" />
-                                                <field name="total" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total" readonly="1" />
-                                                <field name="cobrado" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total" readonly="1" />
-                                                <field name="saldo" widget="monetary" options="{'currency_field': 'currency_id'}" sum="Total" readonly="1" />
-                                                <field name="sucursal_id" readonly="1" widget="many2one_unclickable" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}" />
-                                                <field name="state" readonly="1" />
-                                                <field name="state_mora" readonly="1" />
-                                                <field name="fecha_vencimiento_pre_semana" invisible="1" />
-                                                <field name="fecha_vencimiento_pos_semana" invisible="1" />
-                                                <field name="pagos_360_generar_pago_voluntario" invisible="1" />
-                                                <field name="pagos_360_solicitud_state" readonly="1" />
-                                                <field name="pagos_360_first_due_date" readonly="1" />
-                                                <field name="pagos_360_first_total" readonly="1" />
-                                                <field name="pagos_360_second_due_date" readonly="1" />
-                                                <field name="pagos_360_second_total" readonly="1" />
-                                                <button name="button_renovar_solicitud_cupon" type="object" string="Renovar cupon" class="oe_highlight" attrs="{'invisible': [('pagos_360_generar_pago_voluntario','=', False)]}" />
-                                                <button name="action_cupon_sent" type="object" string="Enviar cupon" class="oe_highlight" attrs="{'invisible': [('pagos_360_generar_pago_voluntario','=', False)]}" />
-                                                <field name="mobbex_suscripcion_suscriptor_confirm" invisible="1" />
-                                                <!-- <button name="mobbex_subscriber_execution" type="object" string="Debitar" class="oe_highlight" attrs="{'invisible': [('mobbex_suscripcion_suscriptor_confirm','=', False)]}" confirm="Esta seguro?"/> -->
-                                            </group>
-                                        </sheet>
-                                        <footer>
-                                            <div class="oe_chatter">
-                                                <!-- <field name="message_follower_ids" widget="mail_followers" groups="base.group_user"/> -->
-                                                <field name="message_ids" widget="mail_thread" />
-                                            </div>
-                                        </footer>
-                                    </form>
                                 </field>
                             </page>
                         </notebook>

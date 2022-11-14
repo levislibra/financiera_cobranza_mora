@@ -16,6 +16,7 @@ class ExtendsResPartner(models.Model):
 	cuota_mora_ids = fields.One2many('financiera.prestamo.cuota', 'partner_cuota_mora_id', 'Cuotas en mora')
 	proxima_cuota_id = fields.Many2one('financiera.prestamo.cuota', 'Proxima cuota a pagar')
 	cuota_mora_numero = fields.Char('Cuota a cobrar numero')
+	cuota_original_saldo = fields.Float('Cuota original saldo', digits=(16, 2))
 	cuota_mora_monto = fields.Float('Cuota a cobrar monto', digits=(16, 2))
 	pagos_360_checkout_url = fields.Char('Pagos360 - Url de pago online', compute='_compute_link_pagos_360')
 	pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf', compute='_compute_link_pagos_360')
@@ -67,6 +68,7 @@ class ExtendsResPartner(models.Model):
 		if len(self.cuota_mora_ids) > 0:
 			self.write({
 				'cuota_mora_numero': self.cuota_mora_ids[0].numero_cuota,
+				'cuota_original_saldo': self.cuota_mora_ids[0].cuota_original_saldo,
 				'cuota_mora_monto': self.cuota_mora_ids[0].saldo,
 			})
 	
