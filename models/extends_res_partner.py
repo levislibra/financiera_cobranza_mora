@@ -15,11 +15,12 @@ class ExtendsResPartner(models.Model):
 
 	cuota_mora_ids = fields.One2many('financiera.prestamo.cuota', 'partner_cuota_mora_id', 'Cuotas en mora')
 	proxima_cuota_id = fields.Many2one('financiera.prestamo.cuota', 'Proxima cuota a pagar')
-	cuota_mora_numero = fields.Char('Cuota a cobrar numero')
-	cuota_original_saldo = fields.Float('Cuota original saldo', digits=(16, 2))
-	cuota_mora_monto = fields.Float('Cuota a cobrar monto', digits=(16, 2))
-	pagos_360_checkout_url = fields.Char('Pagos360 - Url de pago online', compute='_compute_link_pagos_360')
-	pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf', compute='_compute_link_pagos_360')
+	cuota_proximo_vencimiento = fields.Date('Proximo vencimiento')
+	cuota_proxima_numero = fields.Char('Proximo nro de cuota')
+	cuota_proxima_original_saldo = fields.Float('Saldo original', digits=(16, 2))
+	cuota_proxima_monto = fields.Float('Saldo actual', digits=(16, 2))
+	# pagos_360_checkout_url = fields.Char('Pagos360 - Url de pago online', compute='_compute_link_pagos_360')
+	# pagos_360_pdf_url = fields.Char('Pagos360 - Url de cupon de pago en pdf', compute='_compute_link_pagos_360')
 	referido_1_nombre = fields.Char('Referido 1')
 	referido_1_celular = fields.Char('Referido 1 celular')
 	referido_2_nombre = fields.Char('Referido 2')
@@ -43,40 +44,19 @@ class ExtendsResPartner(models.Model):
 	cobranza_externa_id = fields.Many2one('financiera.cobranza.externa', 'Cobranza externa')
 
 	@api.one
-	def compute_cuotas_mora(self):
-		self.cuota_mora_ids = None
-		cuota_obj = self.pool.get('financiera.prestamo.cuota')
-		cuota_ids = cuota_obj.search(self.env.cr, self.env.uid, [
-			('partner_id', '=', self.id),
-			('state_mora', 'not in', ('preventiva', 'normal')),
-			('state', 'in', ('activa', 'judicial', 'incobrable')),
-		])
-		self.cuota_mora_ids = cuota_ids
-		self._saldo_mora()
-		self.compute_cuota_mora()
-		self.compute_referidos()
-
-	@api.one
-	def _saldo_mora(self):
-		saldo = 0
-		for cuota_id in self.cuota_mora_ids:
-			saldo += cuota_id.saldo
-		self.saldo_mora = saldo
-
-	@api.one
-	def compute_cuota_mora(self):
-		if len(self.cuota_mora_ids) > 0:
-			self.write({
-				'cuota_mora_numero': self.cuota_mora_ids[0].numero_cuota,
-				'cuota_original_saldo': self.cuota_mora_ids[0].cuota_original_saldo,
-				'cuota_mora_monto': self.cuota_mora_ids[0].saldo,
-			})
+	def compute_proxima_cuota(self, cuota_id):
+		self.write({
+			'cuota_proximo_vencimiento': cuota_id.fecha_vencimiento,
+			'cuota_proxima_numero': cuota_id.numero_cuota,
+			'cuota_proxima_original_saldo': cuota_id.cuota_original_saldo,
+			'cuota_proxima_monto': cuota_id.saldo,
+		})
 	
-	@api.one
-	def _compute_link_pagos_360(self):
-		if len(self.cuota_mora_ids) > 0:
-			self.pagos_360_checkout_url = self.cuota_mora_ids[0].pagos_360_checkout_url
-			self.pagos_360_pdf_url = self.cuota_mora_ids[0].pagos_360_pdf_url
+	# @api.one
+	# def _compute_link_pagos_360(self):
+	# 	if len(self.cuota_mora_ids) > 0:
+	# 		self.pagos_360_checkout_url = self.cuota_mora_ids[0].pagos_360_checkout_url
+	# 		self.pagos_360_pdf_url = self.cuota_mora_ids[0].pagos_360_pdf_url
 
 	@api.one
 	def compute_referidos(self):
@@ -130,8 +110,3 @@ class ExtendsResPartner(models.Model):
 		else:
 			raise UserError("Modulo cobranza no esta contartado.")
 
-class ExtendsFinancieraPrestamoCuota(models.Model):
-	_name = 'financiera.prestamo.cuota'
-	_inherit = 'financiera.prestamo.cuota'
-
-	partner_cuota_mora_id = fields.Many2one('res.partner', "Cuota en mora")

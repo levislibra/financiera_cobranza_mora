@@ -9,15 +9,18 @@
             <field name="arch" type="xml">
                 <tree string="Clientes" create="false" delete="false" decoration-danger="cobranza_proxima_accion_fecha &lt;= current_date" default_order='cobranza_proxima_accion_fecha asc'>
                     <field name="id" invisible="1" />
+                    <button string="Ver" name="ver_partner" type="object" class="oe_highlight" />
                     <field name="name" />
                     <field name="main_id_number" />
                     <field name="mora_id" />
                     <field name="cobranza_estado_id" />
                     <field name="cobranza_proxima_accion_id" />
                     <field name="cobranza_proxima_accion_fecha" />
-                    <field name="cuota_mora_numero" />
-                    <field name="cuota_original_saldo" />
-                    <field name="cuota_mora_monto" />
+                    <field name="proxima_cuota_id" />
+                    <field name="cuota_proxima_numero" />
+                    <field name="cuota_proximo_vencimiento" />
+                    <field name="cuota_proxima_original_saldo" />
+                    <field name="cuota_proxima_monto" />
                     <field name="saldo_mora" sum="Deuda en Mora" />
                     <field name="saldo_total" sum="Deuda Total" />
                     <field name="cobranza_disponible" invisible="0" />
@@ -30,9 +33,9 @@
                     <field name="referido_2_nombre" />
                     <field name="referido_2_celular" />
                     <field name="cobranza_externa_id" />
-                    <button string="CD" name="carta_documento_report" type="object" class="oe_highlight" />
+                    <!-- <button string="CD" name="carta_documento_report" type="object" class="oe_highlight" />
                     <field name="pagos_360_checkout_url" />
-                    <field name="pagos_360_pdf_url" />
+                    <field name="pagos_360_pdf_url" /> -->
                     <field name="company_id" groups="base.group_erp_manager" />
                 </tree>
             </field>
