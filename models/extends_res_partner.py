@@ -44,7 +44,7 @@ class ExtendsResPartner(models.Model):
 	cobranza_externa_id = fields.Many2one('financiera.cobranza.externa', 'Cobranza externa')
 
 	@api.one
-	def compute_proxima_cuota(self, cuota_id):
+	def compute_proxima_cuota_a_pagar(self, cuota_id):
 		self.write({
 			'cuota_proximo_vencimiento': cuota_id.fecha_vencimiento,
 			'cuota_proxima_numero': cuota_id.numero_cuota,
