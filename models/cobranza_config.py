@@ -2,7 +2,7 @@
 
 from openerp import models, fields, api
 from datetime import datetime
-
+import threading
 class FinancieraCobranzaConfig(models.Model):
 	_name = 'financiera.cobranza.config'
 
@@ -49,7 +49,7 @@ class FinancieraCobranzaConfig(models.Model):
 		return self.id_cobranza_cbu
 
 	@api.one
-	def actualizar_deudores(self):
+	def actualizar_deudores_sub(self):
 		self.fecha = datetime.now()
 		partners_len = 0
 		partners_procesados = 0
@@ -138,6 +138,15 @@ class FinancieraCobranzaConfig(models.Model):
 			i = i + 1
 			if deuda_total > 0:
 				mora_id.porcentaje = (mora_id.monto / deuda_total) * 100
+
+	@api.one
+	def actualizar_deudores(self):
+		with api.Environment.manage():
+			# As this function is in a new thread, I need to open a new cursor, because the old one may be closed
+			new_cr = self.pool.cursor()
+			self = self.with_env(self.env(cr=new_cr))
+			self.actualizar_deudores_sub()
+			new_cr.close()
 
 class ExtendsResCompany(models.Model):
 	_name = 'res.company'
