@@ -2,7 +2,7 @@
 
 from openerp import models, fields, api
 from datetime import datetime
-import threading
+
 class FinancieraCobranzaConfig(models.Model):
 	_name = 'financiera.cobranza.config'
 
@@ -49,7 +49,7 @@ class FinancieraCobranzaConfig(models.Model):
 		return self.id_cobranza_cbu
 
 	@api.one
-	def actualizar_deudores_sub(self):
+	def actualizar_deudores(self):
 		self.fecha = datetime.now()
 		partners_len = 0
 		partners_procesados = 0
@@ -86,7 +86,7 @@ class FinancieraCobranzaConfig(models.Model):
 				'mora_id': False,
 				'proxima_cuota_id': False,
 			})
-			# Buscamos la cuota activa mas antigua del cliente
+			# Buscamos las cuotas activas del cliente
 			cuota_obj = self.pool.get('financiera.prestamo.cuota')
 			cuota_ids = cuota_obj.search(self.env.cr, self.env.uid, [
 				('partner_id', '=', partner_id.id),
@@ -96,10 +96,10 @@ class FinancieraCobranzaConfig(models.Model):
 			flag_primer_cuota_activa_procesada = False
 			cuota_mora_ids = []
 			saldo_mora = 0
+			dias_en_mora = 0
 			for _id in cuota_ids:
 				cuota_id = cuota_obj.browse(self.env.cr, self.env.uid, _id)
 				fecha_vencimiento = datetime.strptime(cuota_id.fecha_vencimiento, "%Y-%m-%d")
-				dias_mora = 0
 				if not flag_primer_cuota_activa_procesada:
 					partner_id.proxima_cuota_id = cuota_id.id
 					partner_id.compute_proxima_cuota_a_pagar(cuota_id)
@@ -107,7 +107,7 @@ class FinancieraCobranzaConfig(models.Model):
 					diferencia = fecha_actual - fecha_vencimiento
 					dias = diferencia.days
 					if fecha_vencimiento < fecha_actual:
-						dias_mora = abs(dias)
+						dias_en_mora = abs(dias)
 					for mora_id in mora_en_memoria_ids:
 						if mora_id['activo'] and dias >= mora_id['dia_inicial_impago'] and dias <= mora_id['dia_final_impago']:
 							deuda_total += partner_saldo
@@ -120,11 +120,10 @@ class FinancieraCobranzaConfig(models.Model):
 					saldo_mora += cuota_id.saldo
 					cuota_mora_ids.append(cuota_id.id)
 			partner_id.compute_referidos()
-			print("dias_mora: %s" % str(dias_mora))
 			partner_id.cuota_mora_ids = cuota_mora_ids
 			partner_id.write({
 				'saldo_mora': saldo_mora,
-				'dias_en_mora': dias_mora,
+				'dias_en_mora': dias_en_mora,
 			})
 			partners_procesados += 1
 			print("Partners procesados: %s%%" % str((float(partners_procesados)/float(partners_len))*100))
@@ -133,20 +132,11 @@ class FinancieraCobranzaConfig(models.Model):
 			mora_id.write({
 				'monto': mora_en_memoria_ids[i]['monto'],
 				'partner_cantidad': mora_en_memoria_ids[i]['partner_cantidad'],
-				'partner_ids': [(6,0,mora_en_memoria_ids[i]['ids'])]
+				'partner_ids': [(6,0, mora_en_memoria_ids[i]['ids'])]
 			})
 			i = i + 1
 			if deuda_total > 0:
 				mora_id.porcentaje = (mora_id.monto / deuda_total) * 100
-
-	@api.one
-	def actualizar_deudores(self):
-		with api.Environment.manage():
-			# As this function is in a new thread, I need to open a new cursor, because the old one may be closed
-			new_cr = self.pool.cursor()
-			self = self.with_env(self.env(cr=new_cr))
-			self.actualizar_deudores_sub()
-			new_cr.close()
 
 class ExtendsResCompany(models.Model):
 	_name = 'res.company'
