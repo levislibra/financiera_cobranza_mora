@@ -72,7 +72,8 @@ class FinancieraCobranzaConfig(models.Model):
 		partner_obj = self.pool.get('res.partner')
 		partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
 			('company_id', '=', self.company_id.id),
-			('state','in', ['confirm','validated']),
+			# ('state','in', ['confirm','validated']),
+			('cuota_ids.state','in', ['activa', 'judicial','incobrable'])
 		])
 		partners_len = len(partner_ids)
 		print("Procesando %s deudores" % str(partners_len))
