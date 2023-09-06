@@ -14,6 +14,7 @@
                     <field name="main_id_number" />
                     <field name="mora_id" />
                     <field name="cobranza_estado_id" />
+					<field name="cobranza_externa_id" />
                     <field name="cobranza_proxima_accion_id" />
                     <field name="cobranza_proxima_accion_fecha" />
                     <field name="proxima_cuota_id" />
@@ -32,7 +33,6 @@
                     <field name="referido_1_celular" />
                     <field name="referido_2_nombre" />
                     <field name="referido_2_celular" />
-                    <field name="cobranza_externa_id" />
                     <!-- <button string="CD" name="carta_documento_report" type="object" class="oe_highlight" />
                     <field name="pagos_360_checkout_url" />
                     <field name="pagos_360_pdf_url" /> -->
@@ -228,8 +228,8 @@
 			<field name="model">res.partner</field>
 			<field name="inherit_id" ref="financiera_prestamos.partner_form_inherited" />
 			<field name="arch" type="xml">
-				<xpath expr="//field[@name='category_id']" position="after">
-					<field name="cobranza_externa_id" string="Estudio externo" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}" />
+				<xpath expr="//label[@for='category_id']" position="before">
+					<field name="cobranza_externa_id" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}" />
 				</xpath>
 			</field>
 		</record>

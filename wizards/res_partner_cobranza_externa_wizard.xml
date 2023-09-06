@@ -9,7 +9,7 @@
         <field name="arch" type="xml">
             <form>
                 <group>
-                    <field name="cobranza_externa_id" required="1" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}"/>
+                    <field name="cobranza_externa_id" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}"/>
                 </group>
                 <footer>
                     <button name="asignar_cobranza_externa" string="Confirmar" class="oe_right oe_highlight" type="object"/>

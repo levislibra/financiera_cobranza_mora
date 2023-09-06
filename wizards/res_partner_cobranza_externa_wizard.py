@@ -18,4 +18,7 @@ class ResPartnerCobranzaExternaWizard(models.TransientModel):
 		active_ids = context.get('active_ids')
 		for _id in active_ids:
 			partner_id = self.env['res.partner'].browse(_id)
-			partner_id.cobranza_externa_id = self.cobranza_externa_id.id
+			if partner_id.cobranza_externa_id:
+				partner_id.cobranza_externa_id = self.cobranza_externa_id.id
+			else:
+				partner_id.cobranza_externa_id = False
