@@ -23,20 +23,20 @@
     <menuitem name="Contactabilidad" id="menu_contactabilidad_action" parent="menu_morosos" action="contactabilidad_action" 
 		groups="financiera_cobranza_mora.manager" sequence="30"/>
 	<menuitem name="Clientes pendiente de actualización" id="menu_partner_pendiente_actualizacion_action" parent="menu_morosos" action="partner_pendiente_actualizacion_action" 
-		groups="financiera_cobranza_mora.user" sequence="30"/>
+		groups="financiera_cobranza_mora.manager" sequence="40"/>
 
-		<menuitem name="Calendario" id="menu_promesas_pagos_action" parent="menu_promesas_pago" action="calendar_promesa_pago_action" 
+	<menuitem name="Calendario" id="menu_promesas_pagos_action" parent="menu_promesas_pago" action="calendar_promesa_pago_action"
 		groups="financiera_cobranza_mora.user"/>
 
-		<menuitem name="Configuracion" id="menu_config_action" parent="menu_config" 
-      action="cobranza_config_action" sequence="1"/>
-		<menuitem name="Estados de conversacion" id="menu_estados_action" parent="menu_config" 
+	<menuitem name="Configuracion" id="menu_config_action" parent="menu_config"
+		action="cobranza_config_action" sequence="1"/>
+	<menuitem name="Estados de conversacion" id="menu_estados_action" parent="menu_config"
 		action="cobranza_historial_estado_action" sequence="10"/>
-		<menuitem name="Acciones de conversacion" id="menu_acciones_action" parent="menu_config" 
+	<menuitem name="Acciones de conversacion" id="menu_acciones_action" parent="menu_config"
 		action="cobranza_historial_accion_action" sequence="20"/>
-		<menuitem name="Notificaciones de deuda" id="menu_notificaciones_action" parent="menu_config" 
+	<menuitem name="Notificaciones de deuda" id="menu_notificaciones_action" parent="menu_config"
 		action="cobranza_notificacion_action" sequence="30"/>
-		<menuitem name="Estudios de cobranza externa" id="menu_cobranza_externa_action" parent="menu_config" 
+	<menuitem name="Estudios de cobranza externa" id="menu_cobranza_externa_action" parent="menu_config"
 		action="cobranza_externa_action" sequence="40"/>
 
 		<!-- Top menu item -->
