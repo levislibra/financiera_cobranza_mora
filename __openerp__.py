@@ -40,6 +40,7 @@
 		'views/views.xml',
 		'wizards/res_partner_debt_to_bank_file_wizard.xml',
 		'wizards/res_partner_cobranza_externa_wizard.xml',
+		'wizards/res_partner_cobranza_mora_wizard.xml',
 		'reports/generic_reports.xml',
 		'data/ir_cron.xml',
     ],

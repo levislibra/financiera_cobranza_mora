@@ -43,6 +43,7 @@ class FinancieraCobranzaConfig(models.Model):
 			company_id = company_obj.browse(self.env.cr, self.env.uid, _id)
 			if len(company_id.cobranza_config_id) > 0:
 				company_id.cobranza_config_id.actualizar_deudores()
+				company_id.cobranza_config_id.fecha = datetime.now()
 
 	def get_id_cobranza_cbu(self):
 		self.id_cobranza_cbu += 1
@@ -50,94 +51,104 @@ class FinancieraCobranzaConfig(models.Model):
 
 	@api.one
 	def actualizar_deudores(self):
-		self.fecha = datetime.now()
-		partners_len = 0
-		partners_procesados = 0
-		# inicializacion
-		mora_en_memoria_ids = []
-		for mora_id in self.mora_ids:
-			mora_en_memoria_ids.append({
-				'activo': mora_id.activo,
-				'dia_inicial_impago': mora_id.dia_inicial_impago,
-				'dia_final_impago':mora_id.dia_final_impago,
-				'monto': 0,
-				'partner_cantidad': 0,
-				'ids': [],
-			})
-			mora_id.write({
-				'monto': 0,
-				'partner_cantidad': 0,
-				'partner_ids': [(6,0,[])]
-			})
 		partner_obj = self.pool.get('res.partner')
 		partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
 			('company_id', '=', self.company_id.id),
-			# ('state','in', ['confirm','validated']),
-			('cuota_ids.state','in', ['activa', 'judicial','incobrable'])
 		])
-		partners_len = len(partner_ids)
-		print("Procesando %s deudores" % str(partners_len))
-		fecha_actual = datetime.now()
-		deuda_total = 0.0
 		for _id in partner_ids:
 			partner_id = partner_obj.browse(self.env.cr, self.env.uid, _id)
-			partner_saldo = partner_id.saldo
-			partner_id.write({
-				'saldo_total': partner_saldo,
-				'mora_id': False,
-				'proxima_cuota_id': False,
-			})
-			# Buscamos las cuotas activas del cliente
-			cuota_obj = self.pool.get('financiera.prestamo.cuota')
-			cuota_ids = cuota_obj.search(self.env.cr, self.env.uid, [
-				('partner_id', '=', partner_id.id),
-				('state','in', ['activa', 'judicial','incobrable'])
-			], order='fecha_vencimiento asc')
-			cuota_id = None
-			flag_primer_cuota_activa_procesada = False
-			cuota_mora_ids = []
-			saldo_mora = 0
-			dias_en_mora = 0
-			for _id in cuota_ids:
-				cuota_id = cuota_obj.browse(self.env.cr, self.env.uid, _id)
-				fecha_vencimiento = datetime.strptime(cuota_id.fecha_vencimiento, "%Y-%m-%d")
-				if not flag_primer_cuota_activa_procesada:
-					partner_id.proxima_cuota_id = cuota_id.id
-					partner_id.compute_proxima_cuota_a_pagar(cuota_id)
-					# Calculamos los dias de la primer cuota activa
-					diferencia = fecha_actual - fecha_vencimiento
-					dias = diferencia.days
-					if fecha_vencimiento < fecha_actual:
-						dias_en_mora = abs(dias)
-					for mora_id in mora_en_memoria_ids:
-						if mora_id['activo'] and dias >= mora_id['dia_inicial_impago'] and dias <= mora_id['dia_final_impago']:
-							deuda_total += partner_saldo
-							mora_id['monto'] = mora_id['monto'] + partner_saldo
-							mora_id['partner_cantidad'] = mora_id['partner_cantidad'] + 1
-							mora_id['ids'].append(partner_id.id)
-							break
-					flag_primer_cuota_activa_procesada = True
-				if fecha_vencimiento < fecha_actual:
-					saldo_mora += cuota_id.saldo
-					cuota_mora_ids.append(cuota_id.id)
-			partner_id.compute_referidos()
-			partner_id.cuota_mora_ids = cuota_mora_ids
-			partner_id.write({
-				'saldo_mora': saldo_mora,
-				'dias_en_mora': dias_en_mora,
-			})
-			partners_procesados += 1
-			print("Partners procesados: %s%%" % str((float(partners_procesados)/float(partners_len))*100))
-		i = 0
-		for mora_id in self.mora_ids:
-			mora_id.write({
-				'monto': mora_en_memoria_ids[i]['monto'],
-				'partner_cantidad': mora_en_memoria_ids[i]['partner_cantidad'],
-				'partner_ids': [(6,0, mora_en_memoria_ids[i]['ids'])]
-			})
-			i = i + 1
-			if deuda_total > 0:
-				mora_id.porcentaje = (mora_id.monto / deuda_total) * 100
+			partner_id.actualizar_deuda_partner()
+
+	# @api.one
+	# def actualizar_deudores(self):
+	# 	self.fecha = datetime.now()
+	# 	partners_len = 0
+	# 	partners_procesados = 0
+	# 	# inicializacion
+	# 	mora_en_memoria_ids = []
+	# 	for mora_id in self.mora_ids:
+	# 		mora_en_memoria_ids.append({
+	# 			'activo': mora_id.activo,
+	# 			'dia_inicial_impago': mora_id.dia_inicial_impago,
+	# 			'dia_final_impago':mora_id.dia_final_impago,
+	# 			'monto': 0,
+	# 			'partner_cantidad': 0,
+	# 			'ids': [],
+	# 		})
+	# 		mora_id.write({
+	# 			'monto': 0,
+	# 			'partner_cantidad': 0,
+	# 			'partner_ids': [(6,0,[])]
+	# 		})
+	# 	partner_obj = self.pool.get('res.partner')
+	# 	partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
+	# 		('company_id', '=', self.company_id.id),
+	# 		# ('state','in', ['confirm','validated']),
+	# 		('cuota_ids.state','in', ['activa', 'judicial','incobrable'])
+	# 	])
+	# 	partners_len = len(partner_ids)
+	# 	print("Procesando %s deudores" % str(partners_len))
+	# 	fecha_actual = datetime.now()
+	# 	deuda_total = 0.0
+	# 	for _id in partner_ids:
+	# 		partner_id = partner_obj.browse(self.env.cr, self.env.uid, _id)
+	# 		partner_saldo = partner_id.saldo
+	# 		partner_id.write({
+	# 			'saldo_total': partner_saldo,
+	# 			'mora_id': False,
+	# 			'proxima_cuota_id': False,
+	# 		})
+	# 		# Buscamos las cuotas activas del cliente
+	# 		cuota_obj = self.pool.get('financiera.prestamo.cuota')
+	# 		cuota_ids = cuota_obj.search(self.env.cr, self.env.uid, [
+	# 			('partner_id', '=', partner_id.id),
+	# 			('state','in', ['activa', 'judicial','incobrable'])
+	# 		], order='fecha_vencimiento asc')
+	# 		cuota_id = None
+	# 		flag_primer_cuota_activa_procesada = False
+	# 		cuota_mora_ids = []
+	# 		saldo_mora = 0
+	# 		dias_en_mora = 0
+	# 		for _id in cuota_ids:
+	# 			cuota_id = cuota_obj.browse(self.env.cr, self.env.uid, _id)
+	# 			fecha_vencimiento = datetime.strptime(cuota_id.fecha_vencimiento, "%Y-%m-%d")
+	# 			if not flag_primer_cuota_activa_procesada:
+	# 				partner_id.proxima_cuota_id = cuota_id.id
+	# 				partner_id.compute_proxima_cuota_a_pagar(cuota_id)
+	# 				# Calculamos los dias de la primer cuota activa
+	# 				diferencia = fecha_actual - fecha_vencimiento
+	# 				dias = diferencia.days
+	# 				if fecha_vencimiento < fecha_actual:
+	# 					dias_en_mora = abs(dias)
+	# 				for mora_id in mora_en_memoria_ids:
+	# 					if mora_id['activo'] and dias >= mora_id['dia_inicial_impago'] and dias <= mora_id['dia_final_impago']:
+	# 						deuda_total += partner_saldo
+	# 						mora_id['monto'] = mora_id['monto'] + partner_saldo
+	# 						mora_id['partner_cantidad'] = mora_id['partner_cantidad'] + 1
+	# 						mora_id['ids'].append(partner_id.id)
+	# 						break
+	# 				flag_primer_cuota_activa_procesada = True
+	# 			if fecha_vencimiento < fecha_actual:
+	# 				saldo_mora += cuota_id.saldo
+	# 				cuota_mora_ids.append(cuota_id.id)
+	# 		partner_id.compute_referidos()
+	# 		partner_id.cuota_mora_ids = cuota_mora_ids
+	# 		partner_id.write({
+	# 			'saldo_mora': saldo_mora,
+	# 			'dias_en_mora': dias_en_mora,
+	# 		})
+	# 		partners_procesados += 1
+	# 		print("Partners procesados: %s%%" % str((float(partners_procesados)/float(partners_len))*100))
+	# 	i = 0
+	# 	for mora_id in self.mora_ids:
+	# 		mora_id.write({
+	# 			'monto': mora_en_memoria_ids[i]['monto'],
+	# 			'partner_cantidad': mora_en_memoria_ids[i]['partner_cantidad'],
+	# 			'partner_ids': [(6,0, mora_en_memoria_ids[i]['ids'])]
+	# 		})
+	# 		i = i + 1
+	# 		if deuda_total > 0:
+	# 			mora_id.porcentaje = (mora_id.monto / deuda_total) * 100
 
 class ExtendsResCompany(models.Model):
 	_name = 'res.company'

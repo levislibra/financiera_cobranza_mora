@@ -42,6 +42,8 @@ class ExtendsResPartner(models.Model):
 	notificacion_ids = fields.One2many('financiera.cobranza.notificacion', 'partner_id', 'Notificaciones')
 	# Estudio de cobranza externa
 	cobranza_externa_id = fields.Many2one('financiera.cobranza.externa', 'Cobranza externa')
+	# actualizacion mora
+	fecha_actualizacion_mora = fields.Date('Fecha actualizacion mora')
 
 	@api.one
 	def compute_proxima_cuota_a_pagar(self, cuota_id):
@@ -52,23 +54,61 @@ class ExtendsResPartner(models.Model):
 			'cuota_proxima_monto': cuota_id.saldo,
 		})
 	
-	# @api.one
-	# def _compute_link_pagos_360(self):
-	# 	if len(self.cuota_mora_ids) > 0:
-	# 		self.pagos_360_checkout_url = self.cuota_mora_ids[0].pagos_360_checkout_url
-	# 		self.pagos_360_pdf_url = self.cuota_mora_ids[0].pagos_360_pdf_url
-
 	@api.one
-	def compute_referidos(self):
-		len_contactos = len(self.contacto_ids)
-		values = {}
-		if len_contactos > 1:
-			values['referido_2_nombre'] = self.contacto_ids[1].name
-			values['referido_2_celular'] = self.contacto_ids[1].movil
-		if len_contactos > 0:
-			values['referido_1_nombre'] = self.contacto_ids[0].name
-			values['referido_1_celular'] = self.contacto_ids[0].movil
-			self.write(values)
+	def actualizar_deuda_partner(self):
+		fecha_actual = datetime.now()
+		partner_saldo = self.saldo
+		self.write({
+			'saldo_total': partner_saldo,
+			'mora_id': False,
+			'proxima_cuota_id': False,
+		})
+		# Buscamos las cuotas activas del cliente
+		cuota_obj = self.pool.get('financiera.prestamo.cuota')
+		cuota_ids = cuota_obj.search(self.env.cr, self.env.uid, [
+			('partner_id', '=', self.id),
+			('state','in', ['activa', 'judicial','incobrable'])
+		], order='fecha_vencimiento asc')
+		cuota_id = None
+		flag_primer_cuota_activa_procesada = False
+		cuota_mora_ids = []
+		saldo_mora = 0
+		dias_en_mora = 0
+		for _id in cuota_ids:
+			cuota_id = cuota_obj.browse(self.env.cr, self.env.uid, _id)
+			fecha_vencimiento = datetime.strptime(cuota_id.fecha_vencimiento, "%Y-%m-%d")
+			if not flag_primer_cuota_activa_procesada:
+				self.proxima_cuota_id = cuota_id.id
+				self.compute_proxima_cuota_a_pagar(cuota_id)
+				# Calculamos los dias de la primer cuota activa
+				diferencia = fecha_actual - fecha_vencimiento
+				dias = diferencia.days
+				if fecha_vencimiento < fecha_actual:
+					dias_en_mora = abs(dias)
+				self.dias_en_mora = dias_en_mora
+				self.mora_id = self.env['res.partner.mora'].get_mora_partner(self)
+				flag_primer_cuota_activa_procesada = True
+			if fecha_vencimiento < fecha_actual:
+				saldo_mora += cuota_id.saldo
+				cuota_mora_ids.append(cuota_id.id)
+		self.cuota_mora_ids = cuota_mora_ids
+		self.write({
+			'saldo_mora': saldo_mora,
+			'dias_en_mora': dias_en_mora,
+			'fecha_actualizacion_mora': fecha_actual,
+		})
+
+	# @api.one
+	# def compute_referidos(self):
+	# 	len_contactos = len(self.contacto_ids)
+	# 	values = {}
+	# 	if len_contactos > 1:
+	# 		values['referido_2_nombre'] = self.contacto_ids[1].name
+	# 		values['referido_2_celular'] = self.contacto_ids[1].movil
+	# 	if len_contactos > 0:
+	# 		values['referido_1_nombre'] = self.contacto_ids[0].name
+	# 		values['referido_1_celular'] = self.contacto_ids[0].movil
+	# 		self.write(values)
 
 	@api.model
 	def cobranza_siguiente_deudor(self):

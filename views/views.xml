@@ -16,12 +16,14 @@
 		<menuitem name="Sesiones" id="menu_sesion_action" parent="menu_sesion" 
 		action="cobranza_sesion_action"/>
 
-		<menuitem name="Clientes" id="menu_morosos_action" parent="menu_morosos" action="cobranza_mora_action" 
+	<menuitem name="Clientes" id="menu_morosos_action" parent="menu_morosos" action="cobranza_mora_action" 
 		groups="financiera_cobranza_mora.manager" sequence="10"/>
     <menuitem name="Notificaicones" id="menu_notificacion_deudor_action" parent="menu_morosos" action="cobranza_notificaciones_action" 
 		groups="financiera_cobranza_mora.manager" sequence="20"/>
     <menuitem name="Contactabilidad" id="menu_contactabilidad_action" parent="menu_morosos" action="contactabilidad_action" 
 		groups="financiera_cobranza_mora.manager" sequence="30"/>
+	<menuitem name="Clientes pendiente de actualización" id="menu_partner_pendiente_actualizacion_action" parent="menu_morosos" action="partner_pendiente_actualizacion_action" 
+		groups="financiera_cobranza_mora.user" sequence="30"/>
 
 		<menuitem name="Calendario" id="menu_promesas_pagos_action" parent="menu_promesas_pago" action="calendar_promesa_pago_action" 
 		groups="financiera_cobranza_mora.user"/>

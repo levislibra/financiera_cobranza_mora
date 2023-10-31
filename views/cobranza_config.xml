@@ -41,9 +41,9 @@
 										<field name="orden" />
 										<field name="name" />
 										<field name="activo" />
-										<field name="monto" sum="Total cartera" />
+										<!-- <field name="monto" sum="Total cartera" />
 										<field name="porcentaje" sum="Total %" />
-										<field name="partner_cantidad" sum="Total" />
+										<field name="partner_cantidad" sum="Total" /> -->
 									</tree>
 									<form string="Segmento">
 										<sheet>

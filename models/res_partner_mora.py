@@ -17,3 +17,19 @@ class ResPartnerMora(models.Model):
 	monto = fields.Float("Monto de la cartera", digits=(16,2))
 	porcentaje = fields.Float("Porcentaje de la cartera", digits=(16,2))
 	company_id = fields.Many2one('res.company', 'Empresa', required=False, default=lambda self: self.env['res.company']._company_default_get('res.partner.mora'))
+
+	def get_mora_partner(self, partner_id):
+		print("get_mora_partner ----------------------")
+		mora_obj = self.env['res.partner.mora']
+		mora_ids = mora_obj.search([
+			('activo', '=', True),
+			('dia_inicial_impago', '<=', partner_id.dias_en_mora),
+			('dia_final_impago', '>=', partner_id.dias_en_mora),
+			('company_id', '=', partner_id.company_id.id),
+		], order='orden asc')
+		print("mora_ids: ", mora_ids)
+		if len(mora_ids) > 0:
+			print("mora_ids[0]: ", mora_ids[0].name)
+			return mora_ids[0]
+		else:
+			return False

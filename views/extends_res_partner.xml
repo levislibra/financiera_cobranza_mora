@@ -12,7 +12,9 @@
                     <button string="Ver" name="ver_partner" type="object" class="oe_highlight" />
                     <field name="name" />
                     <field name="main_id_number" />
-                    <field name="mora_id" />
+					<field name="fecha_actualizacion_mora" />
+					<field name="dias_en_mora"/>
+					<field name="mora_id" />
                     <field name="cobranza_estado_id" />
 					<field name="cobranza_externa_id" />
                     <field name="cobranza_proxima_accion_id" />
@@ -25,14 +27,15 @@
                     <field name="saldo_mora" sum="Deuda en Mora" />
                     <field name="saldo_total" sum="Deuda Total" />
                     <field name="cobranza_disponible" invisible="0" />
-                    <field name="street" />
+					<button string="Actualizar" name="actualizar_deuda_partner" type="object" class="oe_highlight" />
+                    <!-- <field name="street" />
                     <field name="city" />
                     <field name="state_id" />
-                    <field name="zip" />
-                    <field name="referido_1_nombre" />
+                    <field name="zip" /> -->
+                    <!-- <field name="referido_1_nombre" />
                     <field name="referido_1_celular" />
                     <field name="referido_2_nombre" />
-                    <field name="referido_2_celular" />
+                    <field name="referido_2_celular" /> -->
                     <!-- <button string="CD" name="carta_documento_report" type="object" class="oe_highlight" />
                     <field name="pagos_360_checkout_url" />
                     <field name="pagos_360_pdf_url" /> -->
@@ -50,6 +53,7 @@
                 <search>
                     <filter string="Deudor" invisible="1" name="saldo_mora" domain="[('saldo_mora','>', 0)]" />
                     <filter string="Proxima accion vencida" name="proxima_accion_vencida" domain="[('saldo_mora','>', 0), '|', ('cobranza_proxima_accion_fecha','&lt;=', (context_today()).strftime('%%Y-%%m-%%d')),('cobranza_proxima_accion_fecha','=', False)]" />
+					<filter string="Pendientes de actualizar" name="pendientes_actualizar" domain="['|', ('fecha_actualizacion_mora','&lt;', current_date),('fecha_actualizacion_mora','=', False)]"/>
                     <separator />
                     <filter string="Gestion interna" name="gestion_interna" domain="[('cobranza_externa_id', '=', False)]" />
                     <filter string="Gestion externa" name="gestion_externa" domain="[('cobranza_externa_id', '!=', False)]" />
@@ -233,6 +237,34 @@
 				</xpath>
 			</field>
 		</record>
+
+
+		<record model="ir.ui.view" id="cobranza_mora_cliente_pendiente_actualizacion_tree">
+            <field name="name">cobranza.mora.tree</field>
+            <field name="model">res.partner</field>
+            <field name="arch" type="xml">
+                <tree string="Clientes" create="false" delete="false" decoration-danger="fecha_actualizacion_mora &lt; current_date" default_order='fecha_actualizacion_mora asc'>
+                    <field name="id" invisible="1" />
+                    <button string="Ver" name="ver_partner" type="object" class="oe_highlight" />
+                    <field name="name" />
+                    <field name="main_id_number" />
+					<field name="fecha_actualizacion_mora" />
+					<field name="cobranza_proxima_accion_fecha" invisible="1"/>
+					<button string="Actualizar" name="actualizar_deuda_partner" type="object" class="oe_highlight" />
+                    <field name="company_id" groups="base.group_erp_manager" />
+                </tree>
+            </field>
+        </record>
+
+		<record model="ir.actions.act_window" id="partner_pendiente_actualizacion_action">
+            <field name="name">Deudores pendientes de actualización</field>
+            <field name="res_model">res.partner</field>
+            <field name="context">{'search_default_gestion_interna':1, 'search_default_pendientes_actualizar':1}</field>
+            <field name="view_mode">tree</field>
+            <field name="domain">[]</field>
+            <field name="view_ids" eval="[(5, 0, 0), 
+				(0, 0, {'view_mode': 'tree', 'view_id': ref('cobranza_mora_cliente_pendiente_actualizacion_tree')})]" />
+        </record>
 
 
     </data>
