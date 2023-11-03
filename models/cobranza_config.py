@@ -37,10 +37,12 @@ class FinancieraCobranzaConfig(models.Model):
 	
 	@api.model
 	def _cron_actualizar_deudores(self):
+		print("Cron actualizar deudores")
 		company_obj = self.pool.get('res.company')
 		comapny_ids = company_obj.search(self.env.cr, self.env.uid, [])
 		for _id in comapny_ids:
 			company_id = company_obj.browse(self.env.cr, self.env.uid, _id)
+			print("company_id: ", str(company_id.name))
 			if len(company_id.cobranza_config_id) > 0:
 				company_id.cobranza_config_id.actualizar_deudores()
 				company_id.cobranza_config_id.fecha = datetime.now()
@@ -51,13 +53,32 @@ class FinancieraCobranzaConfig(models.Model):
 
 	@api.one
 	def actualizar_deudores(self):
+		print("Actualizacion de deuda de partner iniciada")
 		partner_obj = self.pool.get('res.partner')
-		partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
-			('company_id', '=', self.company_id.id),
-		])
-		for _id in partner_ids:
-			partner_id = partner_obj.browse(self.env.cr, self.env.uid, _id)
-			partner_id.actualizar_deuda_partner()
+		total = 0
+		procesados = 0
+		while True:
+			partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
+				('company_id', '=', self.company_id.id),
+				('prestamo_ids', '!=', False),
+				('cuota_ids.state','in', ['activa', 'judicial','incobrable']),
+				'|', ('fecha_actualizacion_mora', '<', str(datetime.now())), ('fecha_actualizacion_mora', '=', False),
+			], limit=300)
+			print("partner_ids: ", partner_ids)
+			if not partner_ids:
+				break
+			try:
+				total += len(partner_ids)
+				for _id in partner_ids:
+					partner_id = partner_obj.browse(self.env.cr, self.env.uid, _id)
+					partner_id.actualizar_deuda_partner()
+					procesados += 1
+					print("Procesados / Total:", str(procesados), str(total))
+				self.env.cr.commit()
+			except Exception as e:
+				print("Error: ", e)
+				self.env.cr.rollback()
+		self.fecha = datetime.now()
 
 	# @api.one
 	# def actualizar_deudores(self):

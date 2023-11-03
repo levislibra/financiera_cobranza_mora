@@ -56,6 +56,7 @@ class ExtendsResPartner(models.Model):
 	
 	@api.one
 	def actualizar_deuda_partner(self):
+		print("Actualizando deuda de partner")
 		fecha_actual = datetime.now()
 		partner_saldo = self.saldo
 		self.write({
@@ -97,6 +98,7 @@ class ExtendsResPartner(models.Model):
 			'dias_en_mora': dias_en_mora,
 			'fecha_actualizacion_mora': fecha_actual,
 		})
+		print("Actualizacion de deuda de partner finalizada")
 
 	# @api.one
 	# def compute_referidos(self):
