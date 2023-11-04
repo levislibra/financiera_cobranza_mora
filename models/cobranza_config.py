@@ -46,6 +46,7 @@ class FinancieraCobranzaConfig(models.Model):
 			if len(company_id.cobranza_config_id) > 0:
 				company_id.cobranza_config_id.actualizar_deudores()
 				company_id.cobranza_config_id.fecha = datetime.now()
+				company_id.fecha_actualizacion_deudores = datetime.now()
 
 	def get_id_cobranza_cbu(self):
 		self.id_cobranza_cbu += 1
@@ -79,6 +80,7 @@ class FinancieraCobranzaConfig(models.Model):
 				print("Error: ", e)
 				self.env.cr.rollback()
 		self.fecha = datetime.now()
+		self.company_id.fecha_actualizacion_deudores = datetime.now()
 
 	# @api.one
 	# def actualizar_deudores(self):
@@ -176,4 +178,4 @@ class ExtendsResCompany(models.Model):
 	_inherit = 'res.company'
 
 	cobranza_config_id = fields.Many2one('financiera.cobranza.config', 'Configuracion Cobranza y seguimiento')
-	
+	fecha_actualizacion_deudores = fields.Datetime("Fecha ultima actualizacion de deudores")

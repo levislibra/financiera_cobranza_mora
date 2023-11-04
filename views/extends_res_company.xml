@@ -14,6 +14,19 @@
 				</xpath>
 			</field>
 		</record>
+
+		<!-- extends base.view_company_tree -->
+		
+		<record id="app_company_tree_inherited" model="ir.ui.view">
+			<field name="name">Cobranza Mora Extension Company tree</field>
+			<field name="model">res.company</field>
+			<field name="inherit_id" ref="base.view_company_tree"/>
+			<field name="arch" type="xml">
+				<xpath expr="//field[@name='name']" position='after'>
+					<field name="fecha_actualizacion_deudores"/>
+				</xpath>
+			</field>
+		</record>
 		
 	</data>
 </openerp>
