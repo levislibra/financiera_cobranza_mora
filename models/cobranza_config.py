@@ -82,12 +82,12 @@ class FinancieraCobranzaConfig(models.Model):
 				break
 			try:
 				total += len(partner_ids)
-				for _id in partner_ids:
-					partner_id = partner_obj.browse(self.env.cr, self.env.uid, _id)
+				partner_obj_ids = partner_obj.browse(self.env.cr, self.env.uid, partner_ids)
+				for partner_id in partner_obj_ids:
 					partner_id.actualizar_deuda_partner()
 					procesados += 1
 					print("Procesados / Total:", str(procesados), str(total))
-				partner_ids.write({'fecha_actualizacion_mora': today})
+				partner_obj_ids.write({'fecha_actualizacion_mora': today})
 				self.env.cr.commit()
 			except Exception as e:
 				print("Error: ", e)
