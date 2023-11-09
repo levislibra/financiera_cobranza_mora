@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from openerp import models, fields, api
-from datetime import datetime
+from datetime import datetime, timedelta
 
 class FinancieraCobranzaConfig(models.Model):
 	_name = 'financiera.cobranza.config'
@@ -58,14 +58,26 @@ class FinancieraCobranzaConfig(models.Model):
 		partner_obj = self.pool.get('res.partner')
 		total = 0
 		procesados = 0
+		today = datetime.now().date()
+		today_menos_10 = today - timedelta(days=10)
 		while True:
 			partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
 				('company_id', '=', self.company_id.id),
-				('prestamo_ids', '!=', False),
-				('cuota_ids.state','in', ['activa', 'judicial','incobrable']),
-				'|', ('fecha_actualizacion_mora', '<', str(datetime.now())), ('fecha_actualizacion_mora', '=', False),
+				('cuota_ids.state', '=', 'activa'),
+				'|', ('fecha_actualizacion_mora', '<', str(today)), ('fecha_actualizacion_mora', '=', False),
 			], limit=300)
 			print("partner_ids: ", partner_ids)
+			# Buscamos partner que tengan cuotas con pagos en los ultimos 10 dias y sin cuotas activas
+			partner_pagos_recientes_ids = partner_obj.search(self.env.cr, self.env.uid, [
+				('active', '=', True),
+				('company_id.id', '=', self.id),
+				('cuota_ids.state', '!=', 'activa'),
+				('cuota_ids.payment_ids.create_date', '>', str(today_menos_10)),
+				'|', ('fecha_actualizacion_mora', '=', False), ('fecha_actualizacion_mora', '<', str(today)),
+			], limit=200)
+			print("partner_pagos_recientes_ids: ", partner_pagos_recientes_ids)
+			# unir listas
+			partner_ids = partner_ids + partner_pagos_recientes_ids
 			if not partner_ids:
 				break
 			try:
@@ -75,6 +87,7 @@ class FinancieraCobranzaConfig(models.Model):
 					partner_id.actualizar_deuda_partner()
 					procesados += 1
 					print("Procesados / Total:", str(procesados), str(total))
+				partner_ids.write({'fecha_actualizacion_mora': today})
 				self.env.cr.commit()
 			except Exception as e:
 				print("Error: ", e)
