@@ -19,6 +19,18 @@
 			</field>
 		</record>
 
+		<!-- Prestamo tree inherit -->
+		<record id="prestamo_tree_inherited"  model="ir.ui.view">
+			<field name="name">Extension Prestamo Tree</field>
+			<field name="model">financiera.prestamo</field>
+			<field name="inherit_id" ref="financiera_prestamos.financiera_prestamo_tree"/>
+			<field name="arch" type="xml">        
+				<xpath expr="//field[@name='sucursal_id']" position='after'>
+					<field name="cobranza_externa_id"/>
+				</xpath>
+			</field>
+		</record>
+
 		<!-- Vista de lista para prestamos que no se debitan por debito ni CBU -->
 		
 		<!-- <record model="ir.ui.view" id="prestamo_desatendido_tree">

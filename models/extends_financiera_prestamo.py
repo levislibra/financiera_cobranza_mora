@@ -10,6 +10,7 @@ class ExtendsFinancieraPrestamo(models.Model):
 
 	suscripto_debito_cbu = fields.Boolean('Debito por CBU', related='partner_id.suscripto_debito_cbu')
 	no_debitar_cbu = fields.Boolean('No debitar por CBU')
+	cobranza_externa_id = fields.Many2one('financiera.cobranza.externa', 'Cobranza externa', related='partner_id.cobranza_externa_id')
 
 class ExtendsFinancieraPrestamoCuota(models.Model):
 	_name = 'financiera.prestamo.cuota'
