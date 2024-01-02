@@ -44,6 +44,11 @@ class ExtendsResPartner(models.Model):
 	cobranza_externa_id = fields.Many2one('financiera.cobranza.externa', 'Cobranza externa')
 	# actualizacion mora
 	fecha_actualizacion_mora = fields.Date('Fecha actualizacion mora')
+	sucursal_id = fields.Many2one('financiera.entidad', 'Entidad')
+	mora_5_30 = fields.Selection([
+		('hasta_5_dias', 'Hasta 5 dias'), 
+		('5_a_30', '5 a 30 dias'),
+		('mas_de_30', 'Mas de 30 dias')], string='Mora 5 y 30', default='hasta_5_dias')
 
 	@api.one
 	def compute_proxima_cuota_a_pagar(self, cuota_id):
@@ -87,6 +92,8 @@ class ExtendsResPartner(models.Model):
 				if fecha_vencimiento < fecha_actual:
 					dias_en_mora = abs(dias)
 				self.dias_en_mora = dias_en_mora
+				self.compute_alerta_mora_5_30(dias_en_mora)
+				self.sucursal_id = cuota_id.sucursal_id.id
 				self.mora_id = self.env['res.partner.mora'].get_mora_partner(self)
 				flag_primer_cuota_activa_procesada = True
 			if fecha_vencimiento < fecha_actual:
@@ -100,17 +107,16 @@ class ExtendsResPartner(models.Model):
 		})
 		print("Actualizacion de deuda de partner finalizada")
 
-	# @api.one
-	# def compute_referidos(self):
-	# 	len_contactos = len(self.contacto_ids)
-	# 	values = {}
-	# 	if len_contactos > 1:
-	# 		values['referido_2_nombre'] = self.contacto_ids[1].name
-	# 		values['referido_2_celular'] = self.contacto_ids[1].movil
-	# 	if len_contactos > 0:
-	# 		values['referido_1_nombre'] = self.contacto_ids[0].name
-	# 		values['referido_1_celular'] = self.contacto_ids[0].movil
-	# 		self.write(values)
+	@api.one
+	def compute_alerta_mora_5_30(self, dias_en_mora):
+		mora_5_30 = False
+		if dias_en_mora <= 5:
+			mora_5_30 = 'hasta_5_dias'
+		elif dias_en_mora > 5 and dias_en_mora <= 30:
+			mora_5_30 = '5_a_30'
+		elif dias_en_mora > 30:
+			mora_5_30 = 'mas_de_30'
+		self.mora_5_30 = mora_5_30
 
 	@api.model
 	def cobranza_siguiente_deudor(self):
