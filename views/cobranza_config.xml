@@ -23,6 +23,9 @@
 					<header>
 						<button name="actualizar_deudores" class="oe_highlight"
 							string="Actualizar Deudores" type="object" />
+						<button name="reset_fecha_actualizacion_mora"
+							string="Reset fecha de actualizacion" type="object" 
+							confirm="Desea confirmar la accion?"/>
 					</header>
 					<sheet>
 						<group>

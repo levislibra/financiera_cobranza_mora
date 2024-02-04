@@ -52,6 +52,16 @@ class FinancieraCobranzaConfig(models.Model):
 		self.id_cobranza_cbu += 1
 		return self.id_cobranza_cbu
 
+	# reset fecha_actualizacion_mora all partners
+	@api.one
+	def reset_fecha_actualizacion_mora(self):
+		partner_obj = self.pool.get('res.partner')
+		partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
+			('company_id', '=', self.company_id.id),
+		])
+		partner_obj_ids = partner_obj.browse(self.env.cr, self.env.uid, partner_ids)
+		partner_obj_ids.write({'fecha_actualizacion_mora': False})
+
 	@api.one
 	def actualizar_deudores(self):
 		print("Actualizacion de deuda de partner iniciada")
@@ -59,14 +69,13 @@ class FinancieraCobranzaConfig(models.Model):
 		total = 0
 		procesados = 0
 		today = datetime.now().date()
-		today_menos_10 = today - timedelta(days=10)
+		today_menos_10 = today - timedelta(days=120)
 		while True:
 			partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
 				('company_id', '=', self.company_id.id),
 				('cuota_ids.state', '=', 'activa'),
 				'|', ('fecha_actualizacion_mora', '<', str(today)), ('fecha_actualizacion_mora', '=', False),
 			], limit=300)
-			print("partner_ids: ", partner_ids)
 			# Buscamos partner que tengan cuotas con pagos en los ultimos 10 dias y sin cuotas activas
 			partner_pagos_recientes_ids = partner_obj.search(self.env.cr, self.env.uid, [
 				('active', '=', True),
@@ -75,15 +84,17 @@ class FinancieraCobranzaConfig(models.Model):
 				('cuota_ids.payment_ids.create_date', '>', str(today_menos_10)),
 				'|', ('fecha_actualizacion_mora', '=', False), ('fecha_actualizacion_mora', '<', str(today)),
 			], limit=200)
-			print("partner_pagos_recientes_ids: ", partner_pagos_recientes_ids)
 			# unir listas
 			partner_ids = partner_ids + partner_pagos_recientes_ids
+			print("partner_ids: ", partner_ids)
+			print("partner_ids todos: ", partner_ids)
 			if not partner_ids:
 				break
 			try:
 				total += len(partner_ids)
 				partner_obj_ids = partner_obj.browse(self.env.cr, self.env.uid, partner_ids)
 				for partner_id in partner_obj_ids:
+					print("Procesando partner: ", partner_id.name)
 					partner_id.actualizar_deuda_partner()
 					procesados += 1
 					print("Procesados / Total:", str(procesados), str(total))

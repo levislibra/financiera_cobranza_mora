@@ -63,6 +63,7 @@ class ExtendsResPartner(models.Model):
 	def actualizar_deuda_partner(self):
 		print("Actualizando deuda de partner")
 		fecha_actual = datetime.now()
+		self.set_saldos_actuales()
 		partner_saldo = self.saldo
 		self.write({
 			'saldo_total': partner_saldo,
@@ -77,6 +78,8 @@ class ExtendsResPartner(models.Model):
 		], order='fecha_vencimiento asc')
 		cuota_id = None
 		flag_primer_cuota_activa_procesada = False
+		# desasignamos las cuotas en mora
+		self.cuota_mora_ids = False
 		cuota_mora_ids = []
 		saldo_mora = 0
 		dias_en_mora = 0
@@ -96,7 +99,7 @@ class ExtendsResPartner(models.Model):
 				self.sucursal_id = cuota_id.sucursal_id.id
 				self.mora_id = self.env['res.partner.mora'].get_mora_partner(self)
 				flag_primer_cuota_activa_procesada = True
-			if fecha_vencimiento < fecha_actual:
+			if fecha_vencimiento < fecha_actual and cuota_id.state == 'activa':
 				saldo_mora += cuota_id.saldo
 				cuota_mora_ids.append(cuota_id.id)
 		self.cuota_mora_ids = cuota_mora_ids
