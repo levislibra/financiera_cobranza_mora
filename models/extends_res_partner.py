@@ -62,7 +62,8 @@ class ExtendsResPartner(models.Model):
 	@api.one
 	def actualizar_deuda_partner(self):
 		print("Actualizando deuda de partner")
-		fecha_actual = datetime.now()
+		# Obtenemos la fecha actual with time in 00:00:00
+		fecha_actual = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 		self.set_saldos_actuales()
 		partner_saldo = self.saldo
 		self.write({
@@ -70,45 +71,51 @@ class ExtendsResPartner(models.Model):
 			'mora_id': False,
 			'proxima_cuota_id': False,
 		})
-		# Buscamos las cuotas activas del cliente
-		cuota_obj = self.pool.get('financiera.prestamo.cuota')
-		cuota_ids = cuota_obj.search(self.env.cr, self.env.uid, [
-			('partner_id', '=', self.id),
-			('state','in', ['activa', 'judicial','incobrable'])
-		], order='fecha_vencimiento asc')
 		cuota_id = None
 		flag_primer_cuota_activa_procesada = False
-		# desasignamos las cuotas en mora
+		# desasignamos las cuotas en mora 
 		self.cuota_mora_ids = False
 		cuota_mora_ids = []
 		saldo_mora = 0
 		dias_en_mora = 0
-		for _id in cuota_ids:
-			cuota_id = cuota_obj.browse(self.env.cr, self.env.uid, _id)
-			fecha_vencimiento = datetime.strptime(cuota_id.fecha_vencimiento, "%Y-%m-%d")
-			if not flag_primer_cuota_activa_procesada:
-				self.proxima_cuota_id = cuota_id.id
-				self.compute_proxima_cuota_a_pagar(cuota_id)
-				# Calculamos los dias de la primer cuota activa
-				diferencia = fecha_actual - fecha_vencimiento
-				dias = diferencia.days
+		flag_tiene_cuotas_activas = False
+		for cuota_id in self.cuota_ids:
+			# cuota_id = cuota_obj.browse(self.env.cr, self.env.uid, _id)
+			if cuota_id.state in ['activa','judicial']:
+				flag_tiene_cuotas_activas = True
+				fecha_vencimiento = datetime.strptime(cuota_id.fecha_vencimiento, "%Y-%m-%d")
+				if not flag_primer_cuota_activa_procesada:
+					self.proxima_cuota_id = cuota_id.id
+					self.compute_proxima_cuota_a_pagar(cuota_id)
+					# Calculamos los dias de la primer cuota activa
+					diferencia = fecha_actual - fecha_vencimiento
+					dias = diferencia.days
+					if fecha_vencimiento < fecha_actual:
+						dias_en_mora = abs(dias)
+					self.dias_en_mora = dias_en_mora
+					self.compute_alerta_mora_5_30(dias_en_mora)
+					self.sucursal_id = cuota_id.sucursal_id.id
+					self.mora_id = self.env['res.partner.mora'].get_mora_partner(self)
+					flag_primer_cuota_activa_procesada = True
 				if fecha_vencimiento < fecha_actual:
-					dias_en_mora = abs(dias)
-				self.dias_en_mora = dias_en_mora
-				self.compute_alerta_mora_5_30(dias_en_mora)
-				self.sucursal_id = cuota_id.sucursal_id.id
-				self.mora_id = self.env['res.partner.mora'].get_mora_partner(self)
-				flag_primer_cuota_activa_procesada = True
-			if fecha_vencimiento < fecha_actual and cuota_id.state == 'activa':
-				saldo_mora += cuota_id.saldo
-				cuota_mora_ids.append(cuota_id.id)
+					saldo_mora += cuota_id.saldo
+					cuota_mora_ids.append(cuota_id.id)
+		if not flag_tiene_cuotas_activas:
+			self.write({
+				'proxima_cuota_id': False,
+				'cuota_proximo_vencimiento': False,
+				'cuota_proxima_numero': False,
+				'cuota_proxima_original_saldo': False,
+				'cuota_proxima_monto': False,
+				'dias_en_mora': 0,
+				'mora_id': False
+			})
 		self.cuota_mora_ids = cuota_mora_ids
 		self.write({
 			'saldo_mora': saldo_mora,
 			'dias_en_mora': dias_en_mora,
 			'fecha_actualizacion_mora': fecha_actual,
 		})
-		print("Actualizacion de deuda de partner finalizada")
 
 	@api.one
 	def compute_alerta_mora_5_30(self, dias_en_mora):
