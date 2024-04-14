@@ -70,6 +70,7 @@ class FinancieraCobranzaConfig(models.Model):
 		procesados = 0
 		today = datetime.now().date()
 		today_menos_10 = today - timedelta(days=120)
+		today_menos_30 = today - timedelta(days=30)
 		while True:
 			partner_ids = partner_obj.search(self.env.cr, self.env.uid, [
 				('company_id', '=', self.company_id.id),
@@ -84,8 +85,24 @@ class FinancieraCobranzaConfig(models.Model):
 				('cuota_ids.payment_ids.create_date', '>', str(today_menos_10)),
 				'|', ('fecha_actualizacion_mora', '=', False), ('fecha_actualizacion_mora', '<', str(today)),
 			], limit=200)
+			# Buscamos partner que tengan prestamos refinanciados en los ultimos 30 dias
+			partner_creditos_reconfigurados_ids = partner_obj.search(self.env.cr, self.env.uid, [
+				('active', '=', True),
+				('company_id.id', '=', self.id),
+				('prestamo_ids.fecha', '>', str(today_menos_30)),
+				('prestamo_ids.refinanciar_prestamo_origen_id', '!=', False),
+				'|', ('fecha_actualizacion_mora', '=', False), ('fecha_actualizacion_mora', '<', str(today)),
+			], limit=200)
+			print("partner_creditos_reconfigurados_ids: ", partner_creditos_reconfigurados_ids)
+			partner_creditos_precancelados_ids = partner_obj.search(self.env.cr, self.env.uid, [
+				('active', '=', True),
+				('company_id.id', '=', self.id),
+				('prestamo_ids.precancelar_payment_id.payment_date', '>', str(today_menos_30)),
+				'|', ('fecha_actualizacion_mora', '=', False), ('fecha_actualizacion_mora', '<', str(today)),
+			], limit=200)
+			print("partner_creditos_precancelados_ids: ", partner_creditos_precancelados_ids)
 			# unir listas
-			partner_ids = partner_ids + partner_pagos_recientes_ids
+			partner_ids = partner_ids + partner_pagos_recientes_ids + partner_creditos_reconfigurados_ids + partner_creditos_precancelados_ids
 			print("partner_ids: ", partner_ids)
 			print("partner_ids todos: ", partner_ids)
 			if not partner_ids:
