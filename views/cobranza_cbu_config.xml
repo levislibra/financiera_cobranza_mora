@@ -1,24 +1,24 @@
 <openerp>
-  <data>
+	<data>
 
-    
-    <record model="ir.ui.view" id="cobranza_cbu_config_tree">
-      <field name="name">financiera.cobranza.config.tree</field>
-      <field name="model">financiera.cobranza.config</field>
-      <field name="arch" type="xml">
-        <tree string="Configuracion" create="false" edit="false" delete="false">
-          <field name="name"/>
-          <field name="company_id"/>
-        </tree>
-      </field>
-    </record>
 
-    <record model="ir.ui.view" id="cobranza_cbu_config_form">
-      <field name="name">financiera.cobranza.config.form</field>
-      <field name="model">financiera.cobranza.config</field>
-      <field name="arch" type="xml">
-        <form string="Configuracion" create="false" delete="false">
-          <sheet>
+		<record model="ir.ui.view" id="cobranza_cbu_config_tree">
+			<field name="name">financiera.cobranza.config.tree</field>
+			<field name="model">financiera.cobranza.config</field>
+			<field name="arch" type="xml">
+				<tree string="Configuracion" create="false" edit="false" delete="false">
+					<field name="name"/>
+					<field name="company_id"/>
+				</tree>
+			</field>
+		</record>
+
+		<record model="ir.ui.view" id="cobranza_cbu_config_form">
+			<field name="name">financiera.cobranza.config.form</field>
+			<field name="model">financiera.cobranza.config</field>
+			<field name="arch" type="xml">
+				<form string="Configuracion" create="false" delete="false">
+					<sheet>
 						<group>
 							<group>
 								<field name="company_id" groups="base.group_erp_manager"/>
@@ -27,7 +27,7 @@
 							</group>
 							<group></group>
 						</group>
-            <notebook>
+						<notebook>
 							<page name="bna" string="Banco Nacion">
 								<group>
 									<field name="bna_sucursal"/>
@@ -48,20 +48,20 @@
 								</group>
 							</page>
 						</notebook>
-          </sheet>
-        </form>
-      </field>
-    </record>
+					</sheet>
+				</form>
+			</field>
+		</record>
 
-    <record model="ir.actions.act_window" id="cobranza_cbu_config_action">
-      <field name="name">Configuracion</field>
-      <field name="res_model">financiera.cobranza.config</field>
-      <field name="view_mode">tree,form</field>
-      <field name="view_ids" eval="[(5, 0, 0), 
+		<record model="ir.actions.act_window" id="cobranza_cbu_config_action">
+			<field name="name">Configuracion</field>
+			<field name="res_model">financiera.cobranza.config</field>
+			<field name="view_mode">tree,form</field>
+			<field name="view_ids" eval="[(5, 0, 0), 
         (0, 0, {'view_mode': 'tree', 'view_id': ref('cobranza_cbu_config_tree')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('cobranza_cbu_config_form')})]
         "/>
-    </record>
+		</record>
 
-  </data>
+	</data>
 </openerp>

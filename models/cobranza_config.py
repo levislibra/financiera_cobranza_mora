@@ -92,6 +92,26 @@ class FinancieraCobranzaConfig(models.Model):
 				self.env.cr.rollback()
 		self.fecha = datetime.now()
 		self.company_id.fecha_actualizacion_deudores = datetime.now()
+		total_cartera = 0
+		total_segmento = 0
+		for mora_id in self.mora_ids:
+			for partner_id in mora_id.partner_ids:
+				total_cartera += partner_id.saldo_total
+				total_segmento += partner_id.saldo_total
+			mora_id.write({
+				'monto': total_segmento,
+				'partner_cantidad': len(mora_id.partner_ids),
+			})
+			total_segmento = 0  # Reset para el siguiente segmento
+		# Recalcular porcentajes de cada segmento
+		if total_cartera > 0:
+			for mora_id in self.mora_ids:
+				mora_id.porcentaje = (mora_id.monto / total_cartera) * 100
+		else:
+			# Si no hay cartera total, dejar en 0 los porcentajes
+			for mora_id in self.mora_ids:
+				mora_id.porcentaje = 0.0
+		print("Actualizacion de deuda de partner finalizada")
 
 	# @api.one
 	# def actualizar_deudores(self):

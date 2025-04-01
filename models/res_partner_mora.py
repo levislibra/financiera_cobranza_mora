@@ -20,6 +20,7 @@ class ResPartnerMora(models.Model):
 
 	def get_mora_partner(self, partner_id):
 		print("get_mora_partner ----------------------")
+		print("Partner: ", partner_id.name)
 		mora_obj = self.env['res.partner.mora']
 		mora_ids = mora_obj.search([
 			('activo', '=', True),

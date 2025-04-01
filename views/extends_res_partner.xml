@@ -227,7 +227,7 @@
 
 
 		<!-- mostramos el campo cobranza_externa_id en vista del cliente financiera_prestamos.partner_form_inherited -->
-		<record model="ir.ui.view" id="partner_form_inherited_cobranza_mora">
+		<!-- <record model="ir.ui.view" id="partner_form_inherited_cobranza_mora">
 			<field name="name">res.partner.form.inherited.cobranza_externa</field>
 			<field name="model">res.partner</field>
 			<field name="inherit_id" ref="financiera_prestamos.partner_form_inherited" />
@@ -236,7 +236,7 @@
 					<field name="cobranza_externa_id" options="{'no_quick_create':True,'no_create_edit':True, 'no_open':True}" />
 				</xpath>
 			</field>
-		</record>
+		</record> -->
 
 
 		<record model="ir.ui.view" id="cobranza_mora_cliente_pendiente_actualizacion_tree">

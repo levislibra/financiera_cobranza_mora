@@ -90,8 +90,8 @@ class ExtendsResPartner(models.Model):
 					# Calculamos los dias de la primer cuota activa
 					diferencia = fecha_actual - fecha_vencimiento
 					dias = diferencia.days
-					if fecha_vencimiento < fecha_actual:
-						dias_en_mora = abs(dias)
+					# if fecha_vencimiento < fecha_actual:
+					dias_en_mora = dias
 					self.dias_en_mora = dias_en_mora
 					self.compute_alerta_mora_5_30(dias_en_mora)
 					self.sucursal_id = cuota_id.sucursal_id.id
@@ -112,6 +112,7 @@ class ExtendsResPartner(models.Model):
 			})
 		self.cuota_mora_ids = cuota_mora_ids
 		self.write({
+			# 'saldo_total': partner_saldo,
 			'saldo_mora': saldo_mora,
 			'dias_en_mora': dias_en_mora,
 			'fecha_actualizacion_mora': fecha_actual,
